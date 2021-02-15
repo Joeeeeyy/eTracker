@@ -1,11 +1,11 @@
 const express = require('express')
 const app = express()
 require('dotenv').config()
-const mongoose = require('mongoose')
+const bodyParser = require('body-parser')
 
 const cors = require('cors');
-const { mongoose } = require('mongoose');
-const { request } = require('express');
+const mongoose = require('mongoose');
+const req = require('express');
 
 // Connect Database
 let uri = process.env.DB;
@@ -37,7 +37,7 @@ let User = mongoose.model('User', userSchema);
 let Session = mongoose.model('Session', sessionSchema);
 
 app.post('/api/exercise/new-user', bodyParser.urlencoded({ extended:false }), (req, res) => {
-  let newUser = new User({username: request.body.username})
+  let newUser = new User({username: req.body.username})
   newUser.save((err, savedUser) => {
     if(!err) {
       let userObj = {};
@@ -60,9 +60,9 @@ app.get('/api/exercise/users', (req, res) => {
 app.post('/api/exercise/add', bodyParser.urlencoded({ extended: false}), (req, res) => {
 
   let newSession = new Session({
-    description: request.body.description,
-    duration: parseInt(request.body.duration),
-    date: request.body.date
+    description: req.body.description,
+    duration: parseInt(req.body.duration),
+    date: req.body.date
   })
 
   if(newSession.date === '') {
@@ -70,7 +70,7 @@ app.post('/api/exercise/add', bodyParser.urlencoded({ extended: false}), (req, r
   }
 
   User.findByIdAndUpdate(
-    request.body.userId,
+    req.body.userId,
     {$push: {log: newSession}},
     {new: true},
     (err, updatedUser) => {
@@ -88,21 +88,21 @@ app.post('/api/exercise/add', bodyParser.urlencoded({ extended: false}), (req, r
 
 app.get('/api/exercise/log', (req, res) => {
 
-  User.findById(request.query.userId, (err, result) => {
+  User.findById(req.query.userId, (err, result) => {
     if(!err) {
       let userObj = result
 
-      if(request.query.from || request.query.to) {
+      if(req.query.from || req.query.to) {
 
         let fromDate = new Date(0)
         let toDate = new Date()
 
-        if(request.query.from) {
-          fromDate = new Date(request.query.from)
+        if(req.query.from) {
+          fromDate = new Date(req.query.from)
         }
 
-        if(request.query.to) {
-          toDate = new Date(request.query.to)
+        if(req.query.to) {
+          toDate = new Date(req.query.to)
         }
 
         fromDate = fromDate.getTime()
@@ -115,8 +115,8 @@ app.get('/api/exercise/log', (req, res) => {
         })
       }
 
-      if(request.query.limit) {
-        userObj.log = userObj.log.slice(0, request.query.limit)
+      if(req.query.limit) {
+        userObj.log = userObj.log.slice(0, req.query.limit)
       }
 
       userObj = userObj.toJSON()
